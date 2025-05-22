@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
   global db
   db = bbs_db.init_db(db_file)
-  bbs.run_bbs(agw_host, agw_port, bbscall, db_file)
+  bbs.run_bbs(agw_host, agw_port, bbscall, db)
 
   # === Start BBS ===
   while True:
