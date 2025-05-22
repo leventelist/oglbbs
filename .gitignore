@@ -1,0 +1,4 @@
+*.pyz
+__pycache__
+*.db
+build
