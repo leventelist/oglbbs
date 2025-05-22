@@ -1,6 +1,6 @@
 # Python Packet BBS
 
-A simple AGWPE-compatible BBS server using `pyham_pe` and SQLite. This was inspired by the APRS-BBS by [TCC](https://github.com/TheCommsChannel/TC2-APRS-BBS). I really like the concept, but I wanted to be connection oriented to use the capabilities of AX.25/IL2P.
+A simple AGWPE-compatible BBS server using [pyham_pe](https://github.com/mfncooper/pyham_pe) and SQLite. This was inspired by the APRS-BBS by [TCC](https://github.com/TheCommsChannel/TC2-APRS-BBS). I really like the concept, but I wanted to be connection oriented to use the capabilities of AX.25/IL2P.
 
 The development is on Debian Linux. It should work on other platforms, but your mileage may vary.
 
