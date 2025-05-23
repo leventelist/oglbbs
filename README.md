@@ -22,6 +22,11 @@ python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
+You can start the application like this:
+
+```bash
+python -m oglbbs.main
+```
 
 ## Creating pyz
 ```bash
