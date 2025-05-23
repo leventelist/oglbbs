@@ -14,17 +14,19 @@ I filed a feature request for a connection oriented BBS, but in the meanwhile, I
 * SQLite backend
 * SSH interface
 
-## Setup
+
+## Install
 
 ```bash
-python3 -m venv venv
+python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
 ## Creating pyz
 ```bash
-build_pyz.sh
+pip3 install shiv
+shiv -o oglbbs.pyz -e oglbbs.oglbbs:main .
 ```
 This will create a portable pyz file that you can copy wherever you want.
 

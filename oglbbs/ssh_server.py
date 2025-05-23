@@ -2,10 +2,10 @@ import socket
 import paramiko
 import threading
 import select
-import session_manager
-import bbs_db
 
-import bbs
+from . import session_manager
+from . import bbs_db
+from . import bbs
 
 # Dummy user credentials (use PAM or similar for real authentication)
 AUTHORIZED_USERS = {

@@ -1,9 +1,10 @@
 import pe
 import pe.app
 import time
-import bbs_db
-import session_manager
-import ssh_server
+
+from . import bbs_db
+from . import session_manager
+from . import ssh_server
 
 
 # === Main ===

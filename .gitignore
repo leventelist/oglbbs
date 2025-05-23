@@ -2,3 +2,4 @@
 __pycache__
 *.db
 build
+oglbbs.egg-info

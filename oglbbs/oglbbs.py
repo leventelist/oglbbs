@@ -6,9 +6,9 @@ import sys
 import threading
 import time
 
-import ssh_server
-import bbs_db
-import bbs
+from . import ssh_server
+from . import bbs_db
+from . import bbs
 
 
 shutdown_event = threading.Event()
@@ -33,7 +33,7 @@ def shutdown():
   sys.exit(0)
 
 
-if __name__ == '__main__':
+def main():
   signal.signal(signal.SIGHUP, handle_signal)
   signal.signal(signal.SIGTERM, handle_signal)
   signal.signal(signal.SIGINT, handle_signal)
