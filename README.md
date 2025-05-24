@@ -6,6 +6,7 @@ The development is on Debian Linux. It should work on other platforms, but your 
 
 I filed a feature request for a connection oriented BBS, but in the meanwhile, I wrote my own. :-)
 
+
 ## Features
 
 * AGWPE support
@@ -28,22 +29,39 @@ You can start the application like this:
 python -m oglbbs.main
 ```
 
+
 ## Creating pyz
+
 ```bash
 pip3 install shiv
 shiv -o oglbbs.pyz -e oglbbs.oglbbs:main .
 ```
 This will create a portable pyz file that you can copy wherever you want.
 
+
 ## Configuration
 
-Edit `oglbbs.conf`.
+### RSA key
+
+To enable the SSH interface, you have to have an RSA key. If you install it to
+a Linux system, you may (and encouraged to) use the key of your system. On
+Debian, it is located at `/etc/ssh/ssh_host_rsa_key`.
+
+If you want to generate an SSH key, you can do that by
+
+```bash
+ssh-keygen -t rsa -b 4096 -N "" -f bbs_rsa -q
+```
+
+Edit `oglbbs.conf` according to your key and other settings.
+
 
 ## Running
 
 ```bash
 oglbbs.pyz -c oglbbs.conf
 ```
+
 
 ## TODO
 

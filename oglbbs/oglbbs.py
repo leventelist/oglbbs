@@ -58,6 +58,8 @@ def main():
   agw_port = config.getint("agw", "port", fallback=8000)
   bbscall = config.get("station", "call", fallback="N0CALL")
 
+  bbsbanner = config.get("station", "banner", fallback="pyham_pe BBS")
+
   print(f"[*] Using AGWPE host: {agw_host}, port: {agw_port}")
   print(f"[*] Using station call: {bbscall}")
 
@@ -70,7 +72,8 @@ def main():
 
   global db
   db = bbs_db.init_db(db_file)
-  bbs.run_bbs(agw_host, agw_port, bbscall, db)
+  bbs.run_bbs(agw_host, agw_port, bbscall, db, bbsbanner)
+  print("[*] BBS initialized and running.")
 
   # === Start BBS ===
   while True:

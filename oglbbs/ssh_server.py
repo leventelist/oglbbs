@@ -44,6 +44,8 @@ def handle_client(client,):
       transport.add_server_key(host_key)
     except Exception as e:
       print(f"Failed to load host key: {e}")
+      transport.close()
+      close_client(client)
       return
     server = SSHServer()
 
@@ -121,9 +123,8 @@ def handle_client(client,):
       print("Session removed.")
 
 def close_client(client):
-    print("Closing client connection...")
     try:
-        print(f"Closing client...")
+        print(f"Closing client connection...")
         client.close()
     except Exception as e:
         print(f"Error closing client: {e}")

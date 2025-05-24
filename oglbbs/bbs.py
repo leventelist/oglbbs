@@ -1,21 +1,31 @@
 import pe
 import pe.app
 import time
+from pyfiglet import Figlet
 
 from . import bbs_db
 from . import session_manager
 from . import ssh_server
 
+version = "0.0.0"
 
 # === Main ===
-def run_bbs(agw_host, agw_port, call, db_handle):
+def run_bbs(agw_host, agw_port, call, db_handle, banner):
   global app
   global engine
   global db
+  global bbs_banner_text
   db = db_handle
   app = pe.app.Application()
   app.start(agw_host, agw_port)
   engine = app.engine
+
+  #Generate the banner text
+  f = Figlet(font='slant')
+  bbs_banner_text = "\n\n"
+  bbs_banner_text += f.renderText(banner)
+
+  # Set BBS callsign
   engine.register_callsign(call)
   print(f"[*] BBS running on {agw_host}:{agw_port} using AGWPE protocol")
   print(f"[*] Station call: {call}")
@@ -146,9 +156,11 @@ def send_data(session, data):
 
 
 def send_greeting(call_from, call_to, port):
-   msg = b"\nWelcome to OGLBBS!\nType HELP for commands.\r\n>"
-   session = session_manager.get(call_from, call_to, port)
-   send_data(session, msg)
+  session = session_manager.get(call_from, call_to, port)
+  msg = bbs_banner_text.encode()
+  send_data(session, msg)
+  msg = f"\n\nWelcome to OGLBBS v{version}!\nType HELP for commands.\r\n"
+  send_data(session, msg)
 
 
 def shutdown():
