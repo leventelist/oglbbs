@@ -62,6 +62,17 @@ Edit `oglbbs.conf` according to your key and other settings.
 oglbbs.pyz -c oglbbs.conf
 ```
 
+### SSH port
+
+The SSH port is created to be able to login to the BBS from a local TCP/IP network. There is a soft authentication. Be sure to use your callsign as username, and a password. This password will be saved and used for further logins.
+
+Please use a valid callsign. This is validated, and if fails, it will not log you in.
+
+```bash
+ssh ha5ogl@radio
+```
+
+The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and radio is the hostname of the computer running the BBS.
 
 ## TODO
 
