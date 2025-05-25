@@ -2,15 +2,12 @@ import socket
 import paramiko
 import threading
 import select
+import hashlib
 
 from . import session_manager
 from . import bbs_db
 from . import bbs
 
-# Dummy user credentials (use PAM or similar for real authentication)
-AUTHORIZED_USERS = {
-    'user': 'password'
-}
 
 ssh_dymmy_port_id = 1234
 
@@ -19,9 +16,35 @@ class SSHServer(paramiko.ServerInterface):
         self.event = threading.Event()
 
     def check_auth_password(self, username, password):
-        if username in AUTHORIZED_USERS and AUTHORIZED_USERS[username] == password:
-            return paramiko.AUTH_SUCCESSFUL
-        return paramiko.AUTH_FAILED
+        db = bbs_db.init_db(db_file_name)
+
+        username = username.strip().upper()
+        print(f"Authenticating user: {username}")
+        # Validate the callsign format
+        if bbs.is_valid_callsign(username) is False:
+            print(f"Invalid callsign: {username}")
+            bbs_db.shutdown(db)
+            return paramiko.AUTH_FAILED
+        hashed_password = hashlib.sha1(password.encode('utf-8')).hexdigest()
+        print(f"Checking user {username} with hashed password {hashed_password}")
+        # Check if the user exists in the database and the password matches
+        user = bbs_db.get_user(db, username)
+
+        if user is None:
+            print(f"User {username} not found in database.")
+            bbs_db.add_user_with_password(db, username, hashed_password)
+            print(f"User {username} added to database.")
+        elif user[1] != hashed_password:
+            print(f"Password for user {username} does not match.")
+            bbs_db.shutdown(db)
+            return paramiko.AUTH_FAILED
+        call = username.upper()
+        print(f"Authenticated user: {call}")
+        bbs_db.change_login_time(db, username)
+        bbs_db.shutdown(db)
+        print(f"User {username} authenticated successfully.")
+        return paramiko.AUTH_SUCCESSFUL
+
 
     def get_allowed_auths(self, username):
         return 'password'
@@ -35,9 +58,9 @@ class SSHServer(paramiko.ServerInterface):
         self.event.set()
         return True
 
-def handle_client(client,):
+
+def handle_client(client):
     transport = paramiko.Transport(client)
-    # Load system's host key (e.g., /etc/ssh/ssh_host_rsa_key)
     print(f"Loading host key... {key}")
     try:
       host_key = paramiko.RSAKey(filename=key)
@@ -65,36 +88,22 @@ def handle_client(client,):
         print("No shell request.")
         return
 
-    chan.send(f"Welcome to OGLBBS CLI at {bbscallsign}.\nPlease enter your callsign!\nType 'exit' to disconnect.\n> ")
-
+    # Get the authenticated username from the transport
+    print("Client connected, waiting for username...")
+    username = transport.get_username() if hasattr(transport, "get_username") else None
+    print(f"Authenticated username: {username}")
+    if username is None and hasattr(transport, "remote_username"):
+      username = transport.remote_username
 
     db = bbs_db.init_db(db_file_name)
 
-    call = None
+    call = username.upper()
 
-    try:
-        while True:
-            fd = chan.fileno()
-            if fd < 0:
-                break
-            data = chan.recv(1024).decode('utf-8').strip()
-            if not data:
-                break
-            if data.lower() == 'exit':
-                chan.send("Bye!\n")
-                break
-            elif data:
-                call = data.upper()
-                # Here you integrate your custom CLI logic
-                response = f"You entered your call {call}\n> "
-                chan.send(response)
-                session_manager.add_tcp(bbscallsign, call, ssh_dymmy_port_id, chan)
-                bbs.send_greeting(bbscallsign, call, ssh_dymmy_port_id)
-                break
-    except Exception as e:
-        print(f"Error: {e}")
+    print(f"Authenticated user: {call}")
 
-    if call != None:
+    session_manager.add_tcp(bbscallsign, call, ssh_dymmy_port_id, chan)
+    bbs.send_greeting(bbscallsign, call, ssh_dymmy_port_id)
+    if call is not None:
       try:
         while True:
             fd = chan.fileno()
@@ -118,9 +127,10 @@ def handle_client(client,):
     # Close the database connection
     bbs_db.shutdown(db)
     # Remove the session
-    if call != None:
+    if call is not None:
       session_manager.remove(bbscallsign, call, ssh_dymmy_port_id)
       print("Session removed.")
+
 
 def close_client(client):
     try:
@@ -128,6 +138,7 @@ def close_client(client):
         client.close()
     except Exception as e:
         print(f"Error closing client: {e}")
+
 
 def send_data(chan, data):
     try:
@@ -163,6 +174,7 @@ def step():
       threading.Thread(target=handle_client, args=(client,)).start()
     except Exception as e:
       print(f"Error accepting connection: {e}")
+
 
 def shutdown():
     sock.close()

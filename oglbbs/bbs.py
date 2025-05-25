@@ -6,6 +6,7 @@ from pyfiglet import Figlet
 from . import bbs_db
 from . import session_manager
 from . import ssh_server
+import re
 
 version = "0.0.0"
 
@@ -29,6 +30,22 @@ def run_bbs(agw_host, agw_port, call, db_handle, banner):
   engine.register_callsign(call)
   print(f"[*] BBS running on {agw_host}:{agw_port} using AGWPE protocol")
   print(f"[*] Station call: {call}")
+
+
+def is_valid_callsign(callsign: str) -> bool:
+    """
+    Validate an amateur radio callsign with optional SSID (-0 to -15).
+    """
+    # Match full callsign with optional SSID
+    match = re.fullmatch(r'([A-Z0-9]{1,2}[0-9][A-Z]{1,3})(?:-([0-9]|1[0-5]))?', callsign.upper())
+    if not match:
+        return False
+
+    full_prefix = match.group(1)
+    prefix_part = full_prefix[:2]  # first 1–2 characters
+
+    # Ensure at least one letter in first two characters
+    return any(c.isalpha() for c in prefix_part)
 
 
 # === Command Handler ===
