@@ -139,10 +139,24 @@ class bbs_connection(pe.connect.Connection):
   def __init__(self, port, call_from, call_to, incoming=False):
     super().__init__(port, call_from, call_to, incoming)
     # Now perform any initialization of your own that you might need
+    print(f"[*] New connection from {call_from} to {call_to} on port {port}")
+
+  @classmethod
+  def query_accept(cls, port, call_from, call_to):
+    """
+    This method is called when a new connection is being established.
+    You can return True to accept the connection or False to reject it.
+    """
+    print(f"[*] Querying connection from {call_from} to {call_to} on port {port}")
+    # Validate callsigns
+    if not is_valid_callsign(call_from) or not is_valid_callsign(call_to):
+      print(f"[*] Invalid callsign: {call_from} -> {call_to}")
+      return False
+    print(f"[*] Accepting connection from {call_from} to {call_to}")
+    return True
 
   def connected(self):
     print(f"[*] Connection opened from {self.call_from} to {self.call_to}")
-    key = (self.call_from, self.call_to, self.port)
     session_manager.add_ax25(self.call_from, self.call_to, self.port, self)
     send_greeting(self.call_from, self.call_to, self.port)
 
