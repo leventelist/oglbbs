@@ -18,25 +18,29 @@ I filed a feature request for a connection oriented BBS, but in the meanwhile, I
 
 ## Install
 
+### Prerequisites
+
+You need `python` 3.7 or later with `venv`. On many systems, `python` is preinstalled.
+
+On Debian based systems, you might need to install the venv module like this:
+
 ```bash
+sudo apt install python3-venv
+```
+
+### Get oglbbs
+
+git clone https://github.com/leventelist/oglbbs.git
+
+### Get dependecies
+
+
+```bash
+cd oglbbs
 python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
-You can start the application like this:
-
-```bash
-python -m oglbbs.main
-```
-
-
-## Creating pyz
-
-```bash
-pip3 install shiv
-shiv -o oglbbs.pyz -e oglbbs.oglbbs:main .
-```
-This will create a portable pyz file that you can copy wherever you want.
 
 
 ## Configuration
@@ -52,11 +56,28 @@ If you want to generate an SSH key, you can do that by
 ```bash
 ssh-keygen -t rsa -b 4096 -N "" -f bbs_rsa -q
 ```
+### Configuration file
 
-Edit `oglbbs.conf` according to your key and other settings.
+Edit `oglbbs.conf` according to your key and other settings. You must edit the callsign of the BBS.
 
 
 ## Running
+
+You can start the application like this:
+
+```bash
+python3 -m oglbbs.main
+```
+
+## Creating pyz (optional)
+
+```bash
+pip3 install shiv
+shiv -o oglbbs.pyz -e oglbbs.oglbbs:main .
+```
+This will create a portable pyz file that you can copy wherever you want.
+
+You can run the pyz like this
 
 ```bash
 oglbbs.pyz -c oglbbs.conf
@@ -69,6 +90,8 @@ I use [this](https://github.com/jmkristian/agwpe-tools) terminal program on the 
 
 You may try [paracon](https://github.com/mfncooper/paracon), but I had no luck making it work.
 
+And there's [linpac](https://sourceforge.net/projects/linpac/) too.
+
 
 ## SSH port
 
@@ -80,7 +103,8 @@ Please use a valid callsign. This is validated, and if fails, it will not log yo
 ssh ha5ogl@radio
 ```
 
-The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and radio is the hostname of the computer running the BBS.
+The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and `radio` is the hostname of the computer running the BBS.
+
 
 ## Notes
 

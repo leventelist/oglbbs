@@ -39,8 +39,8 @@ def main():
 
   # === Argument Parsing ===
   parser = argparse.ArgumentParser(description="pyham_pe SQLite BBS")
-  parser.add_argument("-c", "--config", default=os.path.join(os.path.dirname(__file__), "oglbbs.conf"),
-          help="Path to config file (default: oglbbs.conf in script directory)")
+  parser.add_argument("-c", "--config", default=os.path.join(os.path.dirname(__file__), "./oglbbs.conf"),
+          help="Path to config file (default: ./oglbbs.conf)")
   args = parser.parse_args()
 
   # === Configuration ===
@@ -57,7 +57,7 @@ def main():
   agw_port = config.getint("agw", "port", fallback=8000)
   bbscall = config.get("station", "call", fallback="N0CALL")
 
-  bbsbanner = config.get("station", "banner", fallback="pyham_pe BBS")
+  bbsbanner = config.get("station", "banner", fallback="OGL BBS")
 
   print(f"[*] Using AGWPE host: {agw_host}, port: {agw_port}")
   print(f"[*] Using station call: {bbscall}")
