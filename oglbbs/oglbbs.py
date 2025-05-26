@@ -22,7 +22,6 @@ def handle_signal(signum, frame):
 def shutdown():
   print("\nShutting down.")
   bbs.shutdown()
-  bbs_db.shutdown(db)
   ssh_server.shutdown()
   for thread in threading.enumerate():
     if thread is not threading.current_thread():
@@ -70,9 +69,7 @@ def main():
 
   ssh_server.start_ssh_server(ssh_addr, ssh_port, ssh_key, bbscall, db_file)
 
-  global db
-  db = bbs_db.init_db(db_file)
-  bbs.run_bbs(agw_host, agw_port, bbscall, db, bbsbanner)
+  bbs.run_bbs(agw_host, agw_port, bbscall, db_file, bbsbanner)
   print("[*] BBS initialized and running.")
 
   # === Start BBS ===

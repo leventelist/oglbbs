@@ -95,8 +95,6 @@ def handle_client(client):
     if username is None and hasattr(transport, "remote_username"):
       username = transport.remote_username
 
-    db = bbs_db.init_db(db_file_name)
-
     call = username.upper()
 
     print(f"Authenticated user: {call}")
@@ -116,7 +114,7 @@ def handle_client(client):
                 chan.send("Bye!\n")
                 break
             elif data:
-                bbs.handle_command(db, bbscallsign, call, ssh_dymmy_port_id, data)
+                bbs.handle_command(db_file_name, bbscallsign, call, ssh_dymmy_port_id, data)
       except Exception as e:
         print(f"Error: {e}")
 
@@ -124,8 +122,6 @@ def handle_client(client):
     transport.close()
     print("Client disconnected.")
 
-    # Close the database connection
-    bbs_db.shutdown(db)
     # Remove the session
     if call is not None:
       session_manager.remove(bbscallsign, call, ssh_dymmy_port_id)

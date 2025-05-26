@@ -11,12 +11,12 @@ import re
 version = "0.0.0"
 
 # === Main ===
-def run_bbs(agw_host, agw_port, call, db_handle, banner):
+def run_bbs(agw_host, agw_port, call, db_file_name, banner):
   global app
   global engine
-  global db
+  global db_filename
   global bbs_banner_text
-  db = db_handle
+  db_filename = db_file_name
   app = pe.app.Application()
   app.start(agw_host, agw_port)
   engine = app.engine
@@ -47,12 +47,16 @@ def is_valid_callsign(callsign: str) -> bool:
     # Ensure at least one letter in first two characters
     return any(c.isalpha() for c in prefix_part)
 
+def send_prompt(session):
+   send_data(session, b'\n> ')
 
 # === Command Handler ===
-def handle_command(db_handle, src, dst, port, line):
+def handle_command(db_filename, src, dst, port, line):
     session = session_manager.get(src, dst, port)
     tokens = line.strip().split(maxsplit=1)
     cmd = tokens[0].upper()
+
+    db_handle = bbs_db.init_db(db_filename)
 
     if cmd == 'HELP':
         send_data(session, b"""
@@ -72,7 +76,7 @@ Commands:
 
     elif cmd == 'MSG':
         if len(tokens) == 2:
-            bbs_db.store_message(db_handle, dst.upper(), tokens[1])
+            bbs_db.store_message(db_handle, src.upper(), tokens[1])
             send_data(session, b"Message stored.\n")
         else:
             send_data(session, b"Usage: MSG <your message>\n")
@@ -132,6 +136,8 @@ Commands:
         session['active'] = False
     else:
         send_data(session, f"Unknown command: {cmd}\n".encode())
+    send_prompt(session)
+    bbs_db.shutdown(db_handle)
 
 
 class bbs_connection(pe.connect.Connection):
@@ -166,7 +172,7 @@ class bbs_connection(pe.connect.Connection):
 
   def data_received(self, pid, data):
       print(f"[*] Data received from {self.call_from} to {self.call_to}: {data}")
-      handle_command(db, self.call_from, self.call_to, self.port, data.decode(errors='ignore').strip())
+      handle_command(db_filename, self.call_from, self.call_to, self.port, data.decode(errors='ignore').strip())
 
 
 def send_data(session, data):
@@ -192,11 +198,11 @@ def send_greeting(call_from, call_to, port):
   send_data(session, msg)
   msg = f"\n\nWelcome to OGLBBS v{version}!\nType HELP for commands.\r\n"
   send_data(session, msg)
+  send_prompt(session)
 
 
 def shutdown():
   try:
-    print("[*] Stopping BBS...")
     app.stop()
     print("[*] BBS stopped.")
   except Exception:
