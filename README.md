@@ -62,7 +62,15 @@ Edit `oglbbs.conf` according to your key and other settings.
 oglbbs.pyz -c oglbbs.conf
 ```
 
-### SSH port
+
+## Accessing the BBS on its radio interface
+
+I use [this](https://github.com/jmkristian/agwpe-tools) terminal program on the other end.
+
+You may try [paracon](https://github.com/mfncooper/paracon), but I had no luck making it work.
+
+
+## SSH port
 
 The SSH port is created to be able to login to the BBS from a local TCP/IP network. There is a soft authentication. Be sure to use your callsign as username, and a password. This password will be saved and used for further logins.
 
@@ -73,6 +81,11 @@ ssh ha5ogl@radio
 ```
 
 The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and radio is the hostname of the computer running the BBS.
+
+## Notes
+
+As of writing, [pyham_pe](https://github.com/mfncooper/pyham_pe) has a [bug](https://github.com/mfncooper/pyham_pe/issues/3). To make it work,
+please apply [these](https://github.com/mfncooper/pyham_pe/pull/4/commits) commits. Hopefully, the developer will merge this soon.
 
 ## TODO
 
