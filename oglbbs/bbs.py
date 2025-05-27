@@ -9,6 +9,8 @@ from . import ssh_server
 import re
 
 version = "0.0.0"
+line_ending = '\r\n'
+
 
 # === Main ===
 def run_bbs(agw_host, agw_port, call, db_file_name, banner):
@@ -17,19 +19,29 @@ def run_bbs(agw_host, agw_port, call, db_file_name, banner):
   global db_filename
   global bbs_banner_text
   db_filename = db_file_name
+
+  if not is_valid_callsign(call):
+    print(f"Invalid callsign: {call}")
+    return False
+
   app = pe.app.Application()
-  app.start(agw_host, agw_port)
+  try:
+    app.start(agw_host, agw_port)
+  except Exception as e:
+    print(f"Error starting BBS: {e}")
+    return False
   engine = app.engine
 
   #Generate the banner text
   f = Figlet(font='slant')
-  bbs_banner_text = "\n\n"
-  bbs_banner_text += f.renderText(banner)
+  bbs_banner_text = line_ending + line_ending
+  bbs_banner_text += f.renderText(banner) + line_ending
 
   # Set BBS callsign
   engine.register_callsign(call)
-  print(f"[*] BBS running on {agw_host}:{agw_port} using AGWPE protocol")
-  print(f"[*] Station call: {call}")
+  print(f"BBS running on {agw_host}:{agw_port} using AGWPE protocol")
+  print(f"Station call: {call}")
+  return True
 
 
 def is_valid_callsign(callsign: str) -> bool:
@@ -48,7 +60,7 @@ def is_valid_callsign(callsign: str) -> bool:
     return any(c.isalpha() for c in prefix_part)
 
 def send_prompt(session):
-   send_data(session, b'\n> ')
+   send_data(session, line_ending + '> ')
 
 # === Command Handler ===
 def handle_command(db_filename, src, dst, port, line):
@@ -59,7 +71,7 @@ def handle_command(db_filename, src, dst, port, line):
     db_handle = bbs_db.init_db(db_filename)
 
     if cmd == 'HELP':
-        send_data(session, b"""
+        send_data(session, """
 Commands:
   HELP              - Show this help
   INFO              - About this BBS
@@ -68,47 +80,46 @@ Commands:
   SEND <CALL> <msg> - Send private message
   READ              - Read private messages
   DEL <ID>          - Delete private message
-  BYE               - Disconnect
-""")
+  BYE               - Disconnect""" + line_ending)
 
     elif cmd == 'INFO':
-        send_data(session, b"This is a pyham_pe BBS with SQLite backend.\n")
+        send_data(session, "This is OGLBBS. More info on https://github.com/leventelist/oglbbs" + line_ending)
 
     elif cmd == 'MSG':
         if len(tokens) == 2:
             bbs_db.store_message(db_handle, src.upper(), tokens[1])
-            send_data(session, b"Message stored.\n")
+            send_data(session, "Message stored." + line_ending)
         else:
-            send_data(session, b"Usage: MSG <your message>\n")
+            send_data(session, "Usage: MSG <your message>" + line_ending)
 
     elif cmd == 'LIST':
         rows = bbs_db.list_messages(db_handle)
         if not rows:
-            send_data(session, b"No public messages.\n")
+            send_data(session, "No public messages." + line_ending)
         else:
-            output = b"\r\n".join([f"[{r[2]}] {r[0]}: {r[1]}".encode() for r in rows])
-            output += b"\n"
+            output = "\r\n".join([f"[{r[2]}] {r[0]}: {r[1]}" for r in rows])
+            output += line_ending
             send_data(session, output)
 
     elif cmd == 'SEND':
         if len(tokens) == 2:
             parts = tokens[1].split(maxsplit=1)
             if len(parts) != 2:
-                send_data(session, b"Usage: SEND <CALLSIGN> <message>\n")
+                send_data(session, "Usage: SEND <CALLSIGN> <message>" + line_ending)
             else:
                 rcpt, msg = parts
                 bbs_db.store_private_message(db_handle, dst.upper(), rcpt.upper(), msg)
-                send_data(session, f"Message sent to {rcpt}\n".encode())
+                send_data(session, f"Message sent to {rcpt}" + line_ending)
         else:
-            send_data(session, b"Usage: SEND <CALLSIGN> <message>\n")
+            send_data(session, "Usage: SEND <CALLSIGN> <message>" + line_ending)
 
     elif cmd == 'READ':
         rows = bbs_db.list_private_messages(db_handle, dst.upper())
         if not rows:
-            send_data(session, b"No private messages.\n")
+            send_data(session, "No private messages." + line_ending)
         else:
-            output = b"\n".join([f"[{r[3]}] ID:{r[0]} From {r[1]}: {r[2]}".encode() for r in rows])
-            output += b"\n"
+            output = "\n\r".join([f"[{r[3]}] ID:{r[0]} From {r[1]}: {r[2]}" for r in rows])
+            output += line_ending
             send_data(session, output)
 
     elif cmd == 'DEL':
@@ -116,26 +127,26 @@ Commands:
             msg_id = int(tokens[1])
             ret = bbs_db.delete_message(db_handle, msg_id, dst.upper())
             if ret:
-              send_data(session, b"Message deleted.\n")
+              send_data(session, "Message deleted." + line_ending)
             else:
-              send_data(session, b"Message not found or not yours.\n")
+              send_data(session, "Message not found or not yours." + line_ending)
         else:
-            send_data(session, b"Usage: DEL <ID>\n")
+            send_data(session, "Usage: DEL <ID>" + line_ending)
 
     elif cmd == 'BYE':
-        send_data(session, b"Goodbye!\n")
+        send_data(session, "Goodbye!" + line_ending)
         if 'ax25_session' in session:
             session['ax25_session'].close()
         elif 'tcp_session' in session:
             # Close the TCP session
-            print(f"[*] Closing TCP session for {src} -> {dst}")
+            print(f"Closing TCP session for {src} -> {dst}")
             #session['tcp_session'].close()
             ssh_server.close_client(session['tcp_session'])
         else:
-            print(f"[*] No session found. Cannot close.")
+            print(f"No session found. Cannot close.")
         session['active'] = False
     else:
-        send_data(session, f"Unknown command: {cmd}\n".encode())
+        send_data(session, f"Unknown command: {cmd}" + line_ending)
     send_prompt(session)
     bbs_db.shutdown(db_handle)
 
@@ -145,7 +156,7 @@ class bbs_connection(pe.connect.Connection):
   def __init__(self, port, call_from, call_to, incoming=False):
     super().__init__(port, call_from, call_to, incoming)
     # Now perform any initialization of your own that you might need
-    print(f"[*] New connection from {call_from} to {call_to} on port {port}")
+    print(f"New connection from {call_from} to {call_to} on port {port}")
 
   @classmethod
   def query_accept(cls, port, call_from, call_to):
@@ -153,50 +164,50 @@ class bbs_connection(pe.connect.Connection):
     This method is called when a new connection is being established.
     You can return True to accept the connection or False to reject it.
     """
-    print(f"[*] Querying connection from {call_from} to {call_to} on port {port}")
+    print(f"Querying connection from {call_from} to {call_to} on port {port}")
     # Validate callsigns
     if not is_valid_callsign(call_from) or not is_valid_callsign(call_to):
-      print(f"[*] Invalid callsign: {call_from} -> {call_to}")
+      print(f"Invalid callsign: {call_from} -> {call_to}")
       return False
-    print(f"[*] Accepting connection from {call_from} to {call_to}")
+    print(f"Accepting connection from {call_from} to {call_to}")
     return True
 
   def connected(self):
-    print(f"[*] Connection opened from {self.call_from} to {self.call_to}")
+    print(f"Connection opened from {self.call_from} to {self.call_to}")
     session_manager.add_ax25(self.call_from, self.call_to, self.port, self)
     send_greeting(self.call_from, self.call_to, self.port)
 
   def disconnected(self):
-      print(f"[*] Connection closed from {self.call_from} to {self.call_to}")
+      print(f"Connection closed from {self.call_from} to {self.call_to}")
       session_manager.remove(self.call_from, self.call_to, self.port)
 
   def data_received(self, pid, data):
-      print(f"[*] Data received from {self.call_from} to {self.call_to}: {data}")
+      print(f"Data received from {self.call_from} to {self.call_to}: {data}")
       handle_command(db_filename, self.call_from, self.call_to, self.port, data.decode(errors='ignore').strip())
 
 
 def send_data(session, data):
   if session['active']:
     if 'ax25_session' in session:
-      print(f"[*] Sending data to ax25 session")
-      session['ax25_session'].send_data(data)
+      print(f"Sending data to ax25 session")
+      session['ax25_session'].send_data(data.encode())
     elif 'tcp_session' in session:
-      print(f"[*] Sending data to tcp_session")
-      ssh_server.send_data(session['tcp_session'], data)
+      print(f"Sending data to tcp_session")
+      ssh_server.send_data(session['tcp_session'], data.encode())
     else:
-      print(f"[*] No session found. Cannot send data.")
+      print(f"No session found. Cannot send data.")
       return False
   else:
-    print(f"[*] Session is not active, cannot send data.")
+    print(f"Session is not active, cannot send data.")
     return False
   return True
 
 
 def send_greeting(call_from, call_to, port):
   session = session_manager.get(call_from, call_to, port)
-  msg = bbs_banner_text.encode()
+  msg = bbs_banner_text
   send_data(session, msg)
-  msg = f"\n\nWelcome to OGLBBS v{version}!\nType HELP for commands.\r\n"
+  msg = line_ending + f"Welcome to OGLBBS v{version}!" + line_ending + "Type HELP for commands." + line_ending
   send_data(session, msg)
   send_prompt(session)
 
@@ -204,6 +215,6 @@ def send_greeting(call_from, call_to, port):
 def shutdown():
   try:
     app.stop()
-    print("[*] BBS stopped.")
+    print("BBS stopped.")
   except Exception:
     pass

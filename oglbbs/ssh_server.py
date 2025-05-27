@@ -26,7 +26,6 @@ class SSHServer(paramiko.ServerInterface):
             bbs_db.shutdown(db)
             return paramiko.AUTH_FAILED
         hashed_password = hashlib.sha1(password.encode('utf-8')).hexdigest()
-        print(f"Checking user {username} with hashed password {hashed_password}")
         # Check if the user exists in the database and the password matches
         user = bbs_db.get_user(db, username)
 
@@ -63,7 +62,10 @@ def handle_client(client):
     transport = paramiko.Transport(client)
     print(f"Loading host key... {key}")
     try:
-      host_key = paramiko.RSAKey(filename=key)
+      if key.endswith('rsa'):
+          host_key = paramiko.RSAKey(filename=key)
+      else:
+          host_key = paramiko.Ed25519Key(filename=key)
       transport.add_server_key(host_key)
     except Exception as e:
       print(f"Failed to load host key: {e}")

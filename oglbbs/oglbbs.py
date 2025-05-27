@@ -20,7 +20,7 @@ def handle_signal(signum, frame):
 
 
 def shutdown():
-  print("\nShutting down.")
+  print("Shutting down.")
   bbs.shutdown()
   ssh_server.shutdown()
   for thread in threading.enumerate():
@@ -39,19 +39,19 @@ def main():
 
   # === Argument Parsing ===
   parser = argparse.ArgumentParser(description="pyham_pe SQLite BBS")
-  parser.add_argument("-c", "--config", default=os.path.join(os.path.dirname(__file__), "./oglbbs.conf"),
+  parser.add_argument("-c", "--config", default="./oglbbs.conf",
           help="Path to config file (default: ./oglbbs.conf)")
   args = parser.parse_args()
 
   # === Configuration ===
-  print(f"[*] Using config file: {args.config}")
+  print(f"Using config file: {args.config}")
   config = configparser.ConfigParser()
   conf_path = args.config
   config.read(conf_path)
 
   db_file = config.get("db", "file_name", fallback="bbs.db")
 
-  print(f"[*] Using database file: {db_file}")
+  print(f"Using database file: {db_file}")
 
   agw_host = config.get("agw", "host", fallback="localhost")
   agw_port = config.getint("agw", "port", fallback=8000)
@@ -59,18 +59,21 @@ def main():
 
   bbsbanner = config.get("station", "banner", fallback="OGL BBS")
 
-  print(f"[*] Using AGWPE host: {agw_host}, port: {agw_port}")
-  print(f"[*] Using station call: {bbscall}")
+  print(f"Using AGWPE host: {agw_host}, port: {agw_port}")
+  print(f"Using station call: {bbscall}")
 
   ssh_addr = config.get("ssh", "listen_addr", fallback="localhost")
   ssh_port = config.getint("ssh", "listen_port", fallback=8002)
   ssh_key = config.get("ssh", "key", fallback="/etc/ssh/ssh_host_rsa_key")
-  print(f"[*] Using SSH listener: {ssh_addr}:{ssh_port}")
+  print(f"Using SSH listener: {ssh_addr}:{ssh_port}")
 
   ssh_server.start_ssh_server(ssh_addr, ssh_port, ssh_key, bbscall, db_file)
 
-  bbs.run_bbs(agw_host, agw_port, bbscall, db_file, bbsbanner)
-  print("[*] BBS initialized and running.")
+  stat = bbs.run_bbs(agw_host, agw_port, bbscall, db_file, bbsbanner)
+  if not stat:
+    print("Failed to start the BBS.")
+    shutdown()
+  print("BBS initialized and running.")
 
   # === Start BBS ===
   while True:

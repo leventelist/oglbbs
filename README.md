@@ -59,6 +59,8 @@ ssh-keygen -t rsa -b 4096 -N "" -f bbs_rsa -q
 ### Configuration file
 
 Edit `oglbbs.conf` according to your key and other settings. You must edit the callsign of the BBS.
+The program will look for the config file in the directory it was started. It is however very encouraged
+to use the `-c` command line option to specify explicitly the location of the configuration file. See below.
 
 
 ## Running
@@ -66,13 +68,13 @@ Edit `oglbbs.conf` according to your key and other settings. You must edit the c
 You can start the application like this:
 
 ```bash
-python3 -m oglbbs.main
+python3 -m oglbbs.main -c ./oglbbs.conf
 ```
+
 
 ## Creating pyz (optional)
 
 ```bash
-pip3 install shiv
 shiv -o oglbbs.pyz -e oglbbs.oglbbs:main .
 ```
 This will create a portable pyz file that you can copy wherever you want.
@@ -80,17 +82,21 @@ This will create a portable pyz file that you can copy wherever you want.
 You can run the pyz like this
 
 ```bash
-oglbbs.pyz -c oglbbs.conf
+oglbbs.pyz -c ./oglbbs.conf
 ```
 
 
 ## Accessing the BBS on its radio interface
 
-I use [this](https://github.com/jmkristian/agwpe-tools) terminal program on the other end.
+You can use any terminal program. Here is a list of some.
 
-You may try [paracon](https://github.com/mfncooper/paracon), but I had no luck making it work.
-
-And there's [linpac](https://sourceforge.net/projects/linpac/) too.
+* [agwpe-tools](https://github.com/jmkristian/agwpe-tools) If you are really a command
+line warrior.
+* [paracon](https://github.com/mfncooper/paracon) This one uses the same
+packet engin as this BBS.
+* [linpac](https://sourceforge.net/projects/linpac/) I think it uses the
+AX.25 implemetation of the kernel. This might not work if your BBS is
+running in IL2P, which is encouraged.
 
 
 ## SSH port
@@ -106,17 +112,12 @@ ssh ha5ogl@radio
 The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and `radio` is the hostname of the computer running the BBS.
 
 
-## Notes
-
-As of writing, [pyham_pe](https://github.com/mfncooper/pyham_pe) has a [bug](https://github.com/mfncooper/pyham_pe/issues/3). To make it work,
-please apply [these](https://github.com/mfncooper/pyham_pe/pull/4/commits) commits. Hopefully, the developer will merge this soon.
-
 ## TODO
 
 * Displaying unread message counter for connecting users.
 * Displaying emergency messages for newly connected users.
 * File transfer
-* Testing
+* Get rid of the old RSA key
 * Testing
 * Testing
 
