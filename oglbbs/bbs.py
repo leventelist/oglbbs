@@ -67,7 +67,65 @@ def handle_command(db_filename, src, dst, port, line):
     session = session_manager.get(src, dst, port)
     tokens = line.strip().split(maxsplit=1)
     cmd = tokens[0].upper()
+    # Stateful command handling
+    # Check if session is in multi-line mode
+    if 'multiline' in session and session['multiline']:
+      # Accumulate lines until end sequence is received
+      if line.strip() == '.':
+        # End of multi-line input
+        full_text = '\n'.join(session['multiline_buffer'])
+        if session['multiline_cmd'] == 'MSG':
+          bbs_db.store_message(db_handle, src.upper(), full_text)
+          send_data(session, "Message stored." + line_ending)
+        elif session['multiline_cmd'] == 'SEND':
+          rcpt = session['multiline_rcpt']
+          bbs_db.store_private_message(db_handle, dst.upper(), rcpt.upper(), full_text)
+          send_data(session, f"Message sent to {rcpt}" + line_ending)
+        # Reset multi-line state
+        session['multiline'] = False
+        session['multiline_cmd'] = None
+        session['multiline_buffer'] = []
+        session['multiline_rcpt'] = None
+      else:
+        session['multiline_buffer'].append(line)
+      send_prompt(session)
+      bbs_db.shutdown(db_handle)
+      return
 
+    # Check for multi-line commands
+    if cmd == 'MSG' and len(tokens) == 1:
+      session['multiline'] = True
+      session['multiline_cmd'] = 'MSG'
+      session['multiline_buffer'] = []
+      session['start_time'] = time.time()
+      send_data(session, "Enter your message. End with a single '.' on a line." + line_ending)
+      send_prompt(session)
+      bbs_db.shutdown(db_handle)
+      return
+    elif cmd == 'SEND' and len(tokens) == 2:
+      parts = tokens[1].split(maxsplit=1)
+      if len(parts) != 2:
+        send_data(session, "Usage: SEND <CALLSIGN> <message>" + line_ending)
+        send_prompt(session)
+        bbs_db.shutdown(db_handle)
+        return
+      rcpt, msg = parts
+      if msg == '.':
+        send_data(session, "Message cannot be empty." + line_ending)
+        send_prompt(session)
+        bbs_db.shutdown(db_handle)
+        return
+      if msg == '':
+        # Start multi-line SEND
+        session['multiline'] = True
+        session['multiline_cmd'] = 'SEND'
+        session['multiline_rcpt'] = rcpt
+        session['multiline_buffer'] = []
+        session['start_time'] = time.time()
+        send_data(session, f"Enter your message to {rcpt}. End with a single '.' on a line." + line_ending)
+        send_prompt(session)
+        bbs_db.shutdown(db_handle)
+        return
     db_handle = bbs_db.init_db(db_filename)
 
     if cmd == 'HELP':
