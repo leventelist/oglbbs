@@ -13,6 +13,11 @@ from . import bbs
 
 shutdown_event = threading.Event()
 
+# Global flags to control the start of TCP and AX.25 servers
+# This is useful for testing purposes.
+start_tcp = True
+start_ax25 = False
+
 
 def handle_signal(signum, frame):
   print(f"\nReceived signal {signum}, shutting down.")
@@ -39,8 +44,12 @@ def main():
 
   # === Argument Parsing ===
   parser = argparse.ArgumentParser(description="pyham_pe SQLite BBS")
-  parser.add_argument("-c", "--config", default="./oglbbs.conf",
-          help="Path to config file (default: ./oglbbs.conf)")
+  parser.add_argument(
+    "-c",
+    "--config",
+    default="./oglbbs.conf",
+    help="Path to config file (default: ./oglbbs.conf)",
+  )
   args = parser.parse_args()
 
   # === Configuration ===
@@ -62,22 +71,40 @@ def main():
   print(f"Using AGWPE host: {agw_host}, port: {agw_port}")
   print(f"Using station call: {bbscall}")
 
-  ssh_addr = config.get("ssh", "listen_addr", fallback="localhost")
-  ssh_port = config.getint("ssh", "listen_port", fallback=8002)
-  ssh_key = config.get("ssh", "key", fallback="/etc/ssh/ssh_host_rsa_key")
-  print(f"Using SSH listener: {ssh_addr}:{ssh_port}")
+  if start_tcp:
+    ssh_addr = config.get("ssh", "listen_addr", fallback="localhost")
+    ssh_port = config.getint("ssh", "listen_port", fallback=8002)
+    ssh_key = config.get("ssh", "key", fallback="/etc/ssh/ssh_host_rsa_key")
+    print(f"Using SSH listener: {ssh_addr}:{ssh_port}")
 
-  ssh_server.start_ssh_server(ssh_addr, ssh_port, ssh_key, bbscall, db_file)
+    ssh_server.start_ssh_server(ssh_addr, ssh_port, ssh_key, bbscall, db_file)
+  else:
+    print("Not starting the SSH server.")
 
-  stat = bbs.run_bbs(agw_host, agw_port, bbscall, db_file, bbsbanner)
-  if not stat:
-    print("Failed to start the BBS.")
-    shutdown()
-  print("BBS initialized and running.")
+  bbs.init(bbsbanner)
+
+  if start_ax25:
+    stat = bbs.run_bbs(agw_host, agw_port, bbscall, db_file)
+    if not stat:
+      print("Failed to start the BBS.")
+      shutdown()
+    print("BBS initialized and running.")
+  else:
+    print("Not starting the AX.25 server.")
+
+  last_housekeeping = time.time()
 
   # === Start BBS ===
   while True:
-    ssh_server.step()
+    if start_tcp:
+      ssh_server.step()
     time.sleep(0.1)
+    # Add maintenance tasks.
+    # Cancel chat requests if it is not answered in 30 seconds.
+    # Delete old messages.
+    # Disconnect inactive users.
+    if time.time() - last_housekeeping > 600:
+      # bbs.housekeeping()
+      last_housekeeping = time.time()
     if shutdown_event.is_set():
       shutdown()

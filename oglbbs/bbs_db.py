@@ -3,67 +3,67 @@ import sqlite3
 
 # === SQLite Setup ===
 def init_db(db_file="bbs.db"):
-    db = sqlite3.connect(db_file)
-    cur = db.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sender TEXT NOT NULL,
-            recipient TEXT,
-            content TEXT NOT NULL,
-            is_private INTEGER DEFAULT 0,
-            deleted INTEGER DEFAULT 0,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    db.commit()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_login DATETIME
-        )
-    """)
-    db.commit()
-    return db
+  db = sqlite3.connect(db_file)
+  cur = db.cursor()
+  cur.execute("""
+      CREATE TABLE IF NOT EXISTS messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sender TEXT NOT NULL,
+          recipient TEXT,
+          content TEXT NOT NULL,
+          is_private INTEGER DEFAULT 0,
+          deleted INTEGER DEFAULT 0,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+  """)
+  db.commit()
+  cur.execute("""
+      CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          last_login DATETIME
+      )
+  """)
+  db.commit()
+  return db
 
 
 def add_user_with_password(db, username, password):
-    cur = db.cursor()
-    try:
-        cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-        db.commit()
-    except sqlite3.IntegrityError:
-      print(f"User {username} already exists.")
-    except sqlite3.Error as e:
-      print(f"Error adding user {username}: {e}")
+  cur = db.cursor()
+  try:
+    cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+    db.commit()
+  except sqlite3.IntegrityError:
+    print(f"User {username} already exists.")
+  except sqlite3.Error as e:
+    print(f"Error adding user {username}: {e}")
 
 
 def get_user(db, username):
-    cur = db.cursor()
-    cur.execute("SELECT username, password FROM users WHERE username = ?", (username,))
-    user = cur.fetchone()
-    return user
+  cur = db.cursor()
+  cur.execute("SELECT username, password FROM users WHERE username = ?", (username,))
+  user = cur.fetchone()
+  return user
 
 
 def change_login_time(db, username):
-    cur = db.cursor()
-    cur.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE username = ?", (username,))
-    db.commit()
-    return cur.rowcount > 0
+  cur = db.cursor()
+  cur.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE username = ?", (username,))
+  db.commit()
+  return cur.rowcount > 0
 
 
 def change_password(db, username, new_password):
-    cur = db.cursor()
-    try:
-        cur.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
-        db.commit()
-        return cur.rowcount > 0
-    except sqlite3.Error as e:
-        print(f"Error changing password for {username}: {e}")
-        return False
+  cur = db.cursor()
+  try:
+    cur.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
+    db.commit()
+    return cur.rowcount > 0
+  except sqlite3.Error as e:
+    print(f"Error changing password for {username}: {e}")
+    return False
 
 
 def store_message(db, sender, content):

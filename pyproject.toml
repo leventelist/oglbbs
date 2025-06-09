@@ -16,3 +16,6 @@ dependencies = [
 
 [project.scripts]
 oglbbs = "oglbbs.main:main"
+
+[tool.ruff]
+indent-width = 2

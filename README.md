@@ -106,16 +106,88 @@ The SSH port is created to be able to login to the BBS from a local TCP/IP netwo
 Please use a valid callsign. This is validated, and if fails, it will not log you in.
 
 ```bash
-ssh ha5ogl@radio
+ssh -p8002 ha5ogl@radio
 ```
 
-The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and `radio` is the hostname of the computer running the BBS.
+The example above shows how I usually log in to the BBS from the local network. `ha5ogl` is my callsign, and `radio` is the hostname of the computer running the BBS. -p specifies the port.
+
+## Usage
+
+Once set up, the BBS supports the following commands:
+
+### HELP
+
+Syntax: `HELP`
+
+Prints a summary of the available commands.
+
+### INFO
+
+Syntax: `INFO`
+
+Prints a general information.
+
+### MSG
+
+Syntax: `MSG message`
+
+Post a public message that can everybody read.
+
+### LIST
+
+Syntax: `LIST`
+
+Show recent public messages.
+
+### SEND
+
+Syntax: `SEND CALL message`
+
+Sends a message to callsign CALL. The mesage will be stored in the database. The message is terminated by a newline character. In practice, when you press enter. Multiline messages are not yet supported.
+
+### READ
+
+Syntax: `READ`
+
+Read all your private messages.
+
+### DEL
+
+Syntax: `DEL ID`
+
+Delete message with ID `ID`.
+
+### VER
+
+Syntax: `VER`
+
+Prints version information
+
+### CHAT
+
+Syntax: `CHAT CALL`
+
+Initiates a real time chat with a user is currently connected. (See the `WHO` command). Chat request can be accepted by the `ACCEPT` command, when prompted. To end a chat, use the `_EOF_` in a single line.
+
+### WHO
+
+Syntax: `WHO`
+
+Prints currently connected users.
+
+### BYE
+
+Syntax: `BYE`
+
+Disconnect from the BBS
 
 
 ## TODO
 
 * Displaying unread message counter for connecting users.
 * Displaying emergency messages for newly connected users.
+* Multi line messages.
+* Synchronize message requests.
 * File transfer
 * Get rid of the old RSA key
 * Testing
