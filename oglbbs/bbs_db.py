@@ -84,7 +84,14 @@ def list_messages(db, limit=5):
 
 def list_private_messages(db, recipient, limit=5):
   cur = db.cursor()
-  cur.execute("SELECT id, sender, content, timestamp FROM messages WHERE recipient = ? AND is_private = 1 AND deleted = 0 ORDER BY id DESC LIMIT ?", (recipient, limit))
+  # Match recipient ignoring SSID (e.g., HA5OGL-1 and HA5OGL-2 both match HA5OGL)
+  base_recipient = recipient.split('-')[0] if '-' in recipient else recipient
+  cur.execute("""
+      SELECT id, sender, content, timestamp FROM messages
+      WHERE (recipient = ? OR recipient LIKE ? || '-%')
+        AND is_private = 1 AND deleted = 0
+      ORDER BY id DESC LIMIT ?
+  """, (base_recipient, base_recipient, limit))
   return cur.fetchall()
 
 
