@@ -4,3 +4,6 @@ __pycache__
 build
 oglbbs.egg-info
 dist
+*.pub
+*_ed25519
+*_rsa

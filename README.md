@@ -12,6 +12,7 @@ I filed a feature request for a connection oriented BBS, but in the meanwhile, I
 * AGWPE support
 * Broadcast messages
 * Private messages
+* Chat with connected users
 * SQLite backend
 * SSH interface
 
@@ -20,7 +21,7 @@ I filed a feature request for a connection oriented BBS, but in the meanwhile, I
 
 ### Prerequisites
 
-You need `python` 3.7 or later with `venv`. On many systems, `python` is preinstalled.
+You need `python` 3.10 or later with `venv`. On many systems, `python` is preinstalled.
 
 On Debian based systems, you might need to install the venv module like this:
 
@@ -54,8 +55,17 @@ Debian, it is located at `/etc/ssh/ssh_host_rsa_key`.
 If you want to generate an SSH key, you can do that by
 
 ```bash
-ssh-keygen -t rsa -b 4096 -N "" -f bbs_rsa -q
+ssh-keygen -t ed25519 -N "" -f oglbbs_ed25519 -q
 ```
+
+Or if you want to stick to the good old, but now legacy RSA key for some reason, use:
+
+```bash
+ssh-keygen -t rsa -b 4096 -N "" -f oglbbs_rsa -q
+```
+
+Add the generated private key file name to your config file. See below.
+
 ### Configuration file
 
 Edit `oglbbs.conf` according to your key and other settings. You must edit the callsign of the BBS.
@@ -184,12 +194,16 @@ Disconnect from the BBS
 
 ## TODO
 
-* Displaying emergency messages for newly connected users.
+* Displaying emergency messages for newly connected users
 * Multi line messages.
 * Synchronize message requests.
+* Send Goodby message when the BBS is shut down
 * File transfer
-* Get rid of the old RSA key
-* Testing
-* Testing
+* Baecon using UI frames.
+* Scheduled houskeeping
+* Standard emergency forms
+* WX forcast
+* Propagation forcast
+* Local repeater information
 
 73's de HA5OGL
