@@ -14,6 +14,9 @@ dependencies = [
     "pyfiglet",
 ]
 
+[tool.setuptools]
+packages = ["oglbbs"]
+
 [project.scripts]
 oglbbs = "oglbbs.main:main"
 
