@@ -16,7 +16,7 @@ shutdown_event = threading.Event()
 # Global flags to control the start of TCP and AX.25 servers
 # This is useful for testing purposes.
 start_tcp = True
-start_ax25 = False
+start_ax25 = True
 
 
 def handle_signal(signum, frame):

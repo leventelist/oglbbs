@@ -33,7 +33,9 @@ def init_db(db_file="bbs.db"):
 def add_user_with_password(db, username, password):
   cur = db.cursor()
   try:
-    cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+    cur.execute(
+      "INSERT INTO users (username, password) VALUES (?, ?)", (username, password)
+    )
     db.commit()
   except sqlite3.IntegrityError:
     print(f"User {username} already exists.")
@@ -50,7 +52,9 @@ def get_user(db, username):
 
 def change_login_time(db, username):
   cur = db.cursor()
-  cur.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE username = ?", (username,))
+  cur.execute(
+    "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE username = ?", (username,)
+  )
   db.commit()
   return cur.rowcount > 0
 
@@ -58,7 +62,9 @@ def change_login_time(db, username):
 def change_password(db, username, new_password):
   cur = db.cursor()
   try:
-    cur.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
+    cur.execute(
+      "UPDATE users SET password = ? WHERE username = ?", (new_password, username)
+    )
     db.commit()
     return cur.rowcount > 0
   except sqlite3.Error as e:
@@ -72,32 +78,48 @@ def store_message(db, sender, content):
 
 
 def store_private_message(db, sender, recipient, content):
-  db.execute("INSERT INTO messages (sender, recipient, content, is_private) VALUES (?, ?, ?, 1)", (sender, recipient, content))
+  db.execute(
+    "INSERT INTO messages (sender, recipient, content, is_private) VALUES (?, ?, ?, 1)",
+    (sender, recipient, content),
+  )
   db.commit()
 
 
 def list_messages(db, limit=5):
   cur = db.cursor()
-  cur.execute("SELECT sender, content, timestamp FROM messages WHERE is_private = 0 AND deleted = 0 ORDER BY id DESC LIMIT ?", (limit,))
+  cur.execute(
+    "SELECT sender, content, timestamp FROM messages WHERE is_private = 0 AND deleted = 0 ORDER BY id DESC LIMIT ?",
+    (limit,),
+  )
   return cur.fetchall()
 
 
 def list_private_messages(db, recipient, limit=5):
   cur = db.cursor()
   # Match recipient ignoring SSID (e.g., HA5OGL-1 and HA5OGL-2 both match HA5OGL)
-  base_recipient = recipient.split('-')[0] if '-' in recipient else recipient
-  cur.execute("""
+  base_recipient = recipient.split("-")[0] if "-" in recipient else recipient
+  cur.execute(
+    """
       SELECT id, sender, content, timestamp FROM messages
       WHERE (recipient = ? OR recipient LIKE ? || '-%')
         AND is_private = 1 AND deleted = 0
       ORDER BY id DESC LIMIT ?
-  """, (base_recipient, base_recipient, limit))
+  """,
+    (base_recipient, base_recipient, limit),
+  )
   return cur.fetchall()
 
 
 def delete_message(db, msg_id, recipient):
   cur = db.cursor()
-  cur.execute("UPDATE messages SET deleted = 1 WHERE id = ? AND recipient = ? AND is_private = 1", (msg_id, recipient))
+  base_recipient = recipient.split("-")[0] if "-" in recipient else recipient
+  cur.execute(
+    """
+      UPDATE messages SET deleted = 1
+      WHERE id = ? AND (recipient = ? OR recipient LIKE ? || '-%') AND is_private = 1
+    """,
+      (msg_id, base_recipient, base_recipient),
+  )
   if cur.rowcount:
     db.commit()
     return True

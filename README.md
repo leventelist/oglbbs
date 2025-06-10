@@ -184,7 +184,6 @@ Disconnect from the BBS
 
 ## TODO
 
-* Displaying unread message counter for connecting users.
 * Displaying emergency messages for newly connected users.
 * Multi line messages.
 * Synchronize message requests.

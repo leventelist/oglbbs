@@ -65,7 +65,7 @@ def is_valid_callsign(callsign: str) -> bool:
 
 
 def send_prompt(session, prefix=""):
-  prompt = line_ending + prefix + "> "
+  prompt = line_ending + prefix + ">" + line_ending
   send_data(session, prompt)
 
 
@@ -183,7 +183,6 @@ Commands:
 
 def handle_new_session(session, db_filename, src, dst, port, line):
   tokens = line.strip().split(maxsplit=1)
-  print(f"Tokens: {tokens}")
   if not tokens:
     return False
 
@@ -241,24 +240,26 @@ Commands:
           send_data(session, "Usage: SEND <CALLSIGN> <message>" + line_ending)
         else:
           rcpt, msg = parts
-          bbs_db.store_private_message(db_handle, dst.upper(), rcpt.upper(), msg)
+          bbs_db.store_private_message(db_handle, src.upper(), rcpt.upper(), msg)
           send_data(session, f"Message sent to {rcpt}" + line_ending)
       else:
         send_data(session, "Usage: SEND <CALLSIGN> <message>" + line_ending)
 
     case "READ":
-      rows = bbs_db.list_private_messages(db_handle, dst.upper())
+      rows = bbs_db.list_private_messages(db_handle, src.upper())
       if not rows:
-        send_data(session, "No private messages." + line_ending)
+        output = "No private messages." + line_ending
       else:
-        output = "\n\r".join([f"[{r[3]}] ID:{r[0]} From {r[1]}: {r[2]}" for r in rows])
+        output = line_ending + "Private messages:" + line_ending
+        for r in rows:
+          output += f"[{r[3]}] ID:{r[0]} From {r[1]}: {r[2]}" + line_ending
         output += line_ending
-        send_data(session, output)
+      send_data(session, output)
 
     case "DEL":
       if len(tokens) == 2 and tokens[1].isdigit():
         msg_id = int(tokens[1])
-        ret = bbs_db.delete_message(db_handle, msg_id, dst.upper())
+        ret = bbs_db.delete_message(db_handle, msg_id, src.upper())
         if ret:
           send_data(session, "Message deleted." + line_ending)
         else:
@@ -336,7 +337,6 @@ class bbs_connection(pe.connect.Connection):
     session_manager.remove(self.call_from, self.call_to, self.port)
 
   def data_received(self, pid, data):
-    print(f"Data received from {self.call_from} to {self.call_to}: {data}")
     handle_command(
       db_filename,
       self.call_from,
@@ -420,6 +420,16 @@ def send_greeting(call_from, call_to, port):
     + "Type HELP for commands."
     + line_ending
   )
+  # Get number of messages
+  db_handle = bbs_db.init_db(db_filename)
+  private_messages = bbs_db.list_private_messages(db_handle, call_from.upper())
+  bbs_db.shutdown(db_handle)
+  message_count = len(private_messages)
+  if message_count > 0:
+    msg += f"You have {message_count} private messages." + line_ending
+  else:
+    msg += "You have no private messages." + line_ending
+
   send_data(session, msg)
   send_prompt(session)
 
