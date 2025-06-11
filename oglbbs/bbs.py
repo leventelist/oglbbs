@@ -8,7 +8,7 @@ from . import session_manager
 from . import ssh_server
 import re
 
-version = "1.0.0"
+version = "1.0.1"
 line_ending = "\r\n"
 
 
