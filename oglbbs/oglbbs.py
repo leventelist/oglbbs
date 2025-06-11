@@ -1,5 +1,4 @@
 import configparser
-import os
 import argparse
 import signal
 import sys
@@ -7,7 +6,6 @@ import threading
 import time
 
 from . import ssh_server
-from . import bbs_db
 from . import bbs
 
 

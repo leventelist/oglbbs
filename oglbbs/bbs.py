@@ -1,6 +1,5 @@
 import pe
 import pe.app
-import time
 from pyfiglet import Figlet
 
 from . import bbs_db
@@ -276,7 +275,7 @@ Commands:
         print(f"Closing TCP session for {src} -> {dst}")
         ssh_server.close_client(session["tcp_session"])
       else:
-        print(f"No session found. Cannot close.")
+        print("No session found. Cannot close.")
       session["active"] = False
 
     case "WHO":
@@ -395,16 +394,16 @@ def chat_init(session, chat_target, call):
 def send_data(session, data):
   if session["active"]:
     if "ax25_session" in session:
-      print(f"Sending data to ax25 session")
+      print("Sending data to ax25 session")
       session["ax25_session"].send_data(data.encode())
     elif "tcp_session" in session:
-      print(f"Sending data to tcp_session")
+      print("Sending data to tcp_session")
       ssh_server.send_data(session["tcp_session"], data.encode())
     else:
-      print(f"No session found. Cannot send data.")
+      print("No session found. Cannot send data.")
       return False
   else:
-    print(f"Session is not active, cannot send data.")
+    print("Session is not active, cannot send data.")
     return False
   return True
 

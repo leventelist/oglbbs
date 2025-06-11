@@ -109,7 +109,7 @@ def handle_client(client):
         fd = chan.fileno()
         if fd < 0:
           break
-        if chan.closed == True:
+        if chan.closed:
           print("Channel closed.")
           break
         data = chan.recv(1024).decode("utf-8").strip()
@@ -131,7 +131,7 @@ def handle_client(client):
 
 def close_client(client):
   try:
-    print(f"Closing client connection...")
+    print("Closing client connection...")
     client.close()
   except Exception as e:
     print(f"Error closing client: {e}")
