@@ -72,7 +72,7 @@ def main():
   print(f"Using station call: {bbscall}")
 
   if start_tcp:
-    ssh_addr = config.get("ssh", "listen_addr", fallback="localhost")
+    ssh_addr = config.get("ssh", "listen_address", fallback="localhost")
     ssh_port = config.getint("ssh", "listen_port", fallback=8002)
     ssh_key = config.get("ssh", "key", fallback="/etc/ssh/ssh_host_rsa_key")
     print(f"Using SSH listener: {ssh_addr}:{ssh_port}")

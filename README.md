@@ -95,6 +95,14 @@ You can run the pyz like this
 oglbbs.pyz -c ./oglbbs.conf
 ```
 
+## Creating a python package (optional)
+
+If you want to create a python package, use this:
+
+```bash
+pip install build
+python3 -m build
+```
 
 ## Accessing the BBS on its radio interface
 
