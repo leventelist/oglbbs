@@ -1,0 +1,32 @@
+services:
+  direwolf:
+    image: f4hlv/direwolf-docker
+    container_name: direwolf
+    volumes:
+      - ./direwolf.conf:/direwolf.conf:ro
+    devices:
+      - /dev/snd  # Needed for audio-based operation
+    ports:
+      - "8000:8000"  # AGWPE port exposed to host (optional)
+    command: ["direwolf", "-c", "/direwolf.conf", "-t", "0", "-p"]
+    restart: unless-stopped
+
+  oglbbs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oglbbs
+    depends_on:
+      - direwolf
+    ports:
+      - "8002:8002"  # SSH access to BBS
+    volumes:
+      - ./oglbbs.conf:/opt/oglbbs/oglbbs.conf:ro
+      - ./oglbbs_ed25519:/opt/oglbbs/oglbbs_ed25519:ro
+      - oglbbs_data:/opt/oglbbs/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+volumes:
+  oglbbs_data:
